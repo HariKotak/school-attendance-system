@@ -1,11 +1,12 @@
 from rest_framework import serializers
 from .models import Student, ParentDetail, Device, DeviceCommand
 
+
 class StudentSerializer(serializers.ModelSerializer):
     parent_name = serializers.CharField(write_only=True)
     contact = serializers.CharField(write_only=True)
-    address = serializers.CharField(write_only=True, required=False)
-
+    address = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    
     class Meta:
         model = Student
         fields = [
@@ -19,21 +20,24 @@ class StudentSerializer(serializers.ModelSerializer):
             "address"
         ]
         read_only_fields = ["fingerprint_id", "fingerprint_enrolled"]
-
+    
     def create(self, validated_data):
+        # Extract parent details
         parent_name = validated_data.pop("parent_name")
         contact = validated_data.pop("contact")
-        address = validated_data.pop("address", None)
-
+        address = validated_data.pop("address", "")
+        
+        # Create student
         student = Student.objects.create(**validated_data)
-
+        
+        # Create parent detail
         ParentDetail.objects.create(
             roll_no=student,
             parent_name=parent_name,
             contact=contact,
             address=address
         )
-
+        
         return student
 
 
@@ -76,3 +80,4 @@ class DeviceCommandSerializer(serializers.ModelSerializer):
             'updated_at',
             'completed_at'
         ]
+        read_only_fields = ['created_at', 'updated_at', 'completed_at']
