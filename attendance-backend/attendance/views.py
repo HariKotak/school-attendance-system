@@ -14,14 +14,15 @@ from .serializers import StudentSerializer
 
 class StudentListCreate(APIView):
     def get(self, request):
-        students = list(Student.objects.all().values(
-            "roll_no",
-            "student_name",
-            "class_name",
-            "fingerprint_id",
-            "fingerprint_enrolled"
-        ))
-        return Response(students)
+        students = Student.objects.all()
+        data = [{
+            "roll_no": s.roll_no,
+            "student_name": s.student_name,
+            "class_name": s.class_name,  # ← This works because we're accessing the model attribute
+            "fingerprint_id": s.fingerprint_id,
+            "fingerprint_enrolled": s.fingerprint_enrolled
+        } for s in students]
+        return Response(data)
 
     def post(self, request):
         serializer = StudentSerializer(data=request.data)
