@@ -497,3 +497,22 @@ def get_devices(request):
         })
 
     return Response(data)
+    # At the end of views.py
+@api_view(['GET'])
+def test_db(request):
+    try:
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            result = cursor.fetchone()
+        
+        return Response({
+            "status": "Database connection OK",
+            "result": result
+        })
+    except Exception as e:
+        import traceback
+        return Response({
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }, status=500)
