@@ -14,10 +14,13 @@ from .serializers import StudentSerializer
 
 class StudentListCreate(APIView):
     def get(self, request):
-        students = Student.objects.all().values(
-            "roll_no", "student_name", "class_name",
-            "fingerprint_id", "fingerprint_enrolled"
-        )
+        students = list(Student.objects.all().values(
+            "roll_no",
+            "student_name",
+            "class_name",
+            "fingerprint_id",
+            "fingerprint_enrolled"
+        ))
         return Response(students)
 
     def post(self, request):
@@ -25,6 +28,7 @@ class StudentListCreate(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"message": "Student added"}, status=201)
+
 
 
 class StudentDelete(APIView):
@@ -197,7 +201,7 @@ def mark_attendance(request):
             'student': student.student_name,
             'roll_no': student.roll_no,
             'class': student.class_name,
-            'timestamp': log.timestamp
+            'timestamp': log.timestamp.isoformat() if log.timestamp else None
         }, status=status.HTTP_200_OK)
         
     except Student.DoesNotExist:
@@ -424,15 +428,16 @@ def check_command_status(request, command_id):
     try:
         command = DeviceCommand.objects.get(id=command_id)
         return Response({
-            'status': command.status,
-            'message': command.message,
-            'student_name': command.student.student_name,
-            'fingerprint_id': command.fingerprint_id,
-            'command_type': command.command_type,
-            'created_at': command.created_at,
-            'updated_at': command.updated_at,
-            'completed_at': command.completed_at
-        })
+    'status': command.status,
+    'message': command.message,
+    'student_name': command.student.student_name,
+    'fingerprint_id': command.fingerprint_id,
+    'command_type': command.command_type,
+    'created_at': command.created_at.isoformat() if command.created_at else None,
+    'updated_at': command.updated_at.isoformat() if command.updated_at else None,
+    'completed_at': command.completed_at.isoformat() if command.completed_at else None,
+})
+
     except DeviceCommand.DoesNotExist:
         return Response({'error': 'Command not found'}, status=404)
 
