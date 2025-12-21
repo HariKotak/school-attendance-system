@@ -442,6 +442,7 @@ def get_devices(request):
     """Device list"""
     devices = Device.objects.all()
     data = []
+
     for device in devices:
         data.append({
             'device_id': device.device_id,
@@ -449,6 +450,7 @@ def get_devices(request):
             'status': device.status,
             'is_online': device.is_online(),
             'current_mode': device.current_mode,
-            'last_seen': device.last_seen
+            'last_seen': device.last_seen.isoformat() if device.last_seen else None
         })
+
     return Response(data)
