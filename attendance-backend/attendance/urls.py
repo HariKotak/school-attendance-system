@@ -21,4 +21,5 @@ urlpatterns = [
     path('student/delete-fingerprint/', views.delete_fingerprint),
     path('command/<int:command_id>/', views.check_command_status),
     path('devices/', views.get_devices),
+    path('test-db/', views.test_db),
 ]
