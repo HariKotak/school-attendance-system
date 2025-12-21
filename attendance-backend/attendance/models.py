@@ -6,7 +6,6 @@ class Student(models.Model):
     student_name = models.CharField(max_length=100)
     class_name = models.CharField(max_length=10, db_column="class")
     
-    # SIMPLIFIED: Only fingerprint_id needed (no identifier_code)
     fingerprint_id = models.IntegerField(
         null=True, 
         blank=True, 
@@ -20,7 +19,7 @@ class Student(models.Model):
 
     class Meta:
         db_table = "student"
-        managed = True
+        # REMOVED managed = False - Django will now manage this table
 
     def __str__(self):
         return f"{self.student_name} (Roll: {self.roll_no})"
@@ -35,11 +34,11 @@ class ParentDetail(models.Model):
     )
     parent_name = models.CharField(max_length=100)
     contact = models.CharField(max_length=15)
-    address = models.CharField(max_length=255, null=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = "parent_detail"
-        managed = True
+        # REMOVED managed = False
 
 
 class DailyAttendance(models.Model):
@@ -53,8 +52,8 @@ class DailyAttendance(models.Model):
 
     class Meta:
         db_table = "daily_attendance"
-        managed = True
         unique_together = ("roll_no", "attendance_date")
+        # REMOVED managed = False
 
 
 class TotalAttendance(models.Model):
@@ -64,14 +63,14 @@ class TotalAttendance(models.Model):
         primary_key=True,
         db_column="roll_no"
     )
-    present_days = models.IntegerField(default=0)  # ← ADD default=0
-    absent_days = models.IntegerField(default=0)   # ← ADD default=0
-    continuous_absent = models.IntegerField(default=0)  # ← ADD default=0
-    present_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)  # ← ADD default=0.00
+    present_days = models.IntegerField(default=0)
+    absent_days = models.IntegerField(default=0)
+    continuous_absent = models.IntegerField(default=0)
+    present_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
 
     class Meta:
         db_table = "total_attendance"
-        managed = True
+        # REMOVED managed = False
 
 
 # ============== FINGERPRINT SYSTEM ==============
