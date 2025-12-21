@@ -14,22 +14,59 @@ from .serializers import StudentSerializer
 
 class StudentListCreate(APIView):
     def get(self, request):
-        students = Student.objects.all()
-        data = [{
-            "roll_no": s.roll_no,
-            "student_name": s.student_name,
-            "class_name": s.class_name,  # ← This works because we're accessing the model attribute
-            "fingerprint_id": s.fingerprint_id,
-            "fingerprint_enrolled": s.fingerprint_enrolled
-        } for s in students]
-        return Response(data)
+        try:
+            # Try to fetch students
+            students = Student.objects.all()
+            
+            # Check if query works
+            print(f"Found {students.count()} students")
+            
+            # Build response
+            data = []
+            for s in students:
+                try:
+                    data.append({
+                        "roll_no": s.roll_no,
+                        "student_name": s.student_name,
+                        "class_name": s.class_name,
+                        "fingerprint_id": s.fingerprint_id,
+                        "fingerprint_enrolled": s.fingerprint_enrolled
+                    })
+                except Exception as e:
+                    print(f"Error processing student {s.roll_no}: {str(e)}")
+                    # Skip problematic student
+                    continue
+            
+            return Response(data)
+            
+        except Exception as e:
+            # Log the actual error
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"ERROR in StudentListCreate.get(): {str(e)}")
+            print(error_details)
+            
+            # Return error to frontend for debugging
+            return Response({
+                "error": str(e),
+                "details": error_details,
+                "message": "Failed to fetch students"
+            }, status=500)
 
     def post(self, request):
-        serializer = StudentSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"message": "Student added"}, status=201)
-
+        try:
+            serializer = StudentSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response({"message": "Student added"}, status=201)
+        except Exception as e:
+            import traceback
+            print(f"ERROR in StudentListCreate.post(): {str(e)}")
+            print(traceback.format_exc())
+            return Response({
+                "error": str(e),
+                "message": "Failed to add student"
+            }, status=500)
 
 
 class StudentDelete(APIView):
