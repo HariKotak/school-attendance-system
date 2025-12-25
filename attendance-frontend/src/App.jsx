@@ -16,7 +16,7 @@ function LoginPage({ onLogin }) {
     
     // Simple authentication - replace with real backend authentication
     setTimeout(() => {
-      if (credentials.username === 'admin' && credentials.password === 'school123') {
+      if (credentials.username === 'csf' && credentials.password === 'csf') {
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('username', credentials.username);
         onLogin();
