@@ -176,6 +176,53 @@ class AbsentList(APIView):
         return Response(result)
 
 
+# ============== NEW: PRESENT STUDENTS ENDPOINT ==============
+
+@api_view(['GET'])
+def get_present_students(request):
+    """Get students who are present today (marked attendance)"""
+    date_param = request.GET.get("date", date.today())
+    class_name = request.GET.get("class")
+
+    query = """
+        SELECT
+            s.roll_no,
+            s.student_name,
+            s.class,
+            d.attendance_date,
+            al.timestamp
+        FROM student s
+        JOIN daily_attendance d ON s.roll_no = d.roll_no
+        LEFT JOIN attendance_log al ON s.roll_no = al.student_id 
+            AND DATE(al.timestamp) = d.attendance_date
+        WHERE d.attendance_date = %s
+          AND d.status = 'P'
+    """
+    params = [date_param]
+
+    if class_name:
+        query += " AND s.class = %s"
+        params.append(class_name)
+
+    query += " ORDER BY s.class, s.roll_no"
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+
+    result = []
+    for r in rows:
+        result.append({
+            "roll_no": r[0],
+            "student_name": r[1],
+            "class_name": r[2],
+            "date": str(r[3]),
+            "time": r[4].strftime('%H:%M:%S') if r[4] else None
+        })
+
+    return Response(result)
+
+
 # ============== FINGERPRINT DEVICE ENDPOINTS ==============
 
 @api_view(['POST'])
@@ -466,16 +513,15 @@ def check_command_status(request, command_id):
     try:
         command = DeviceCommand.objects.get(id=command_id)
         return Response({
-    'status': command.status,
-    'message': command.message,
-    'student_name': command.student.student_name,
-    'fingerprint_id': command.fingerprint_id,
-    'command_type': command.command_type,
-    'created_at': command.created_at.isoformat() if command.created_at else None,
-    'updated_at': command.updated_at.isoformat() if command.updated_at else None,
-    'completed_at': command.completed_at.isoformat() if command.completed_at else None,
-})
-
+            'status': command.status,
+            'message': command.message,
+            'student_name': command.student.student_name,
+            'fingerprint_id': command.fingerprint_id,
+            'command_type': command.command_type,
+            'created_at': command.created_at.isoformat() if command.created_at else None,
+            'updated_at': command.updated_at.isoformat() if command.updated_at else None,
+            'completed_at': command.completed_at.isoformat() if command.completed_at else None,
+        })
     except DeviceCommand.DoesNotExist:
         return Response({'error': 'Command not found'}, status=404)
 
@@ -497,9 +543,11 @@ def get_devices(request):
         })
 
     return Response(data)
-    # At the end of views.py
+
+
 @api_view(['GET'])
 def test_db(request):
+    """Test database connection"""
     try:
         from django.db import connection
         with connection.cursor() as cursor:
